@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type { Task, TaskStatus, TaskPriority } from '../types/Task';
 import { Column } from './Column';
 import { TaskModal } from './TaskModal';
+import { ConfirmDialog } from './ConfirmDialog';
 import './Board.css';
 
 const API_URL = 'http://localhost:3001/api/tasks';
@@ -21,6 +22,7 @@ export function Board() {
   const [sourceStatus, setSourceStatus] = useState<TaskStatus | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<TaskStatus | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
@@ -28,6 +30,12 @@ export function Board() {
     assignee: '',
     dueDate: '',
   });
+
+  // Filter state
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<TaskStatus | ''>('');
+  const [priorityFilter, setPriorityFilter] = useState<TaskPriority | ''>('');
+  const [assigneeFilter, setAssigneeFilter] = useState('');
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -218,6 +226,46 @@ export function Board() {
     setSelectedTask(null);
   };
 
+  const handleDeleteRequest = (taskId: string) => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (task) {
+      setTaskToDelete(task);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (taskToDelete) {
+      await handleDelete(taskToDelete.id);
+      setTaskToDelete(null);
+      setSelectedTask(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setTaskToDelete(null);
+  };
+
+  // Get unique assignees for filter dropdown
+  const assignees = [...new Set(tasks.map((t) => t.assignee).filter(Boolean))];
+
+  // Filter tasks
+  const filteredTasks = tasks.filter((task) => {
+    const matchesSearch = search === '' ||
+      task.title.toLowerCase().includes(search.toLowerCase()) ||
+      (task.description?.toLowerCase().includes(search.toLowerCase()) ?? false);
+    const matchesStatus = statusFilter === '' || task.status === statusFilter;
+    const matchesPriority = priorityFilter === '' || task.priority === priorityFilter;
+    const matchesAssignee = assigneeFilter === '' || task.assignee === assigneeFilter;
+    return matchesSearch && matchesStatus && matchesPriority && matchesAssignee;
+  });
+
+  const clearFilters = () => {
+    setSearch('');
+    setStatusFilter('');
+    setPriorityFilter('');
+    setAssigneeFilter('');
+  };
+
   if (loading) {
     return (
       <div className="board-loading">
@@ -229,6 +277,51 @@ export function Board() {
   return (
     <div className="board">
       <div className="board-header">
+        <div className="board-filters">
+          <input
+            type="text"
+            className="filter-search"
+            placeholder="Search tasks..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <select
+            className="filter-select"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as TaskStatus | '')}
+          >
+            <option value="">All Status</option>
+            <option value="todo">To Do</option>
+            <option value="in-progress">In Progress</option>
+            <option value="in-review">In Review</option>
+            <option value="done">Done</option>
+          </select>
+          <select
+            className="filter-select"
+            value={priorityFilter}
+            onChange={(e) => setPriorityFilter(e.target.value as TaskPriority | '')}
+          >
+            <option value="">All Priorities</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+          <select
+            className="filter-select"
+            value={assigneeFilter}
+            onChange={(e) => setAssigneeFilter(e.target.value)}
+          >
+            <option value="">All Assignees</option>
+            {assignees.map((a) => (
+              <option key={a} value={a}>{a}</option>
+            ))}
+          </select>
+          {(search || statusFilter || priorityFilter || assigneeFilter) && (
+            <button className="filter-clear" onClick={clearFilters}>
+              Clear
+            </button>
+          )}
+        </div>
         <button className="add-task-btn" onClick={() => setShowForm(true)}>
           + New Task
         </button>
@@ -240,7 +333,7 @@ export function Board() {
             key={column.status}
             title={column.title}
             status={column.status}
-            tasks={tasks.filter((t) => t.status === column.status)}
+            tasks={filteredTasks.filter((t) => t.status === column.status)}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             onDrop={handleDrop}
@@ -249,6 +342,7 @@ export function Board() {
             isDragOver={dragOverStatus === column.status && sourceStatus !== column.status}
             isDragging={!!draggedTaskId}
             onOpenModal={handleOpenModal}
+            onDelete={handleDeleteRequest}
           />
         ))}
       </div>
@@ -328,8 +422,16 @@ export function Board() {
         <TaskModal
           task={selectedTask}
           onClose={handleCloseModal}
-          onDelete={handleDelete}
+          onDelete={handleDeleteRequest}
           onUpdate={handleUpdateTask}
+        />
+      )}
+
+      {taskToDelete && (
+        <ConfirmDialog
+          message={`Delete "${taskToDelete.title}"? This action cannot be undone.`}
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
         />
       )}
     </div>

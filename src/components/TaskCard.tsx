@@ -6,6 +6,7 @@ interface TaskCardProps {
   onDragStart: (taskId: string) => void;
   onDragEnd: () => void;
   onOpenModal: (task: Task) => void;
+  onDelete: (taskId: string) => void;
 }
 
 const statusColors: Record<Task['status'], { bg: string; label: string }> = {
@@ -21,14 +22,18 @@ const priorityColors: Record<Task['priority'], { bg: string; label: string }> = 
   'high': { bg: '#ef4444', label: 'High' },
 };
 
-export function TaskCard({ task, onDragStart, onDragEnd, onOpenModal }: TaskCardProps) {
+export function TaskCard({ task, onDragStart, onDragEnd, onOpenModal, onDelete }: TaskCardProps) {
   const handleDragStart = (e: React.DragEvent) => {
     e.stopPropagation();
     onDragStart(task.id);
   };
 
-  const handleClick = () => {
-    onOpenModal(task);
+  const handleClick = (e: React.MouseEvent) => {
+    if (e.shiftKey) {
+      onDelete(task.id);
+    } else {
+      onOpenModal(task);
+    }
   };
 
   const statusStyle = statusColors[task.status];

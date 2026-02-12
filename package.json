@@ -4,9 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "start": "npm run server & npm run dev",
+    "stop": "pkill -f 'tsx server' && pkill -f vite",
     "dev": "vite",
     "server": "tsx server/index.ts",
-    "dev:all": "npm run server & npm run dev",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
