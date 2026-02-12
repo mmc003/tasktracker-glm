@@ -132,6 +132,9 @@
 .modal-footer {
   padding: 16px 20px;
   border-top: 1px solid var(--border-color);
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
 }
 
 .modal-delete-btn {
@@ -143,11 +146,57 @@
   font-size: 13px;
   cursor: pointer;
   transition: all 0.15s;
+  margin-right: auto;
 }
 
 .modal-delete-btn:hover {
   background: rgba(239, 68, 68, 0.2);
   border-color: rgba(239, 68, 68, 0.3);
+}
+
+.modal-edit-btn {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.modal-edit-btn:hover {
+  opacity: 0.9;
+}
+
+.modal-cancel-btn {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.modal-cancel-btn:hover {
+  background: var(--border-color);
+}
+
+.modal-save-btn {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.modal-save-btn:hover {
+  opacity: 0.9;
 }
 
 .modal-input,

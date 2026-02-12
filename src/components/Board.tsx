@@ -49,6 +49,17 @@ export function Board() {
     fetchTasks();
   }, [fetchTasks]);
 
+  // ESC key to close new task form
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showForm) {
+        setShowForm(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showForm]);
+
   // Optimistic status change
   const handleStatusChange = async (taskId: string, newStatus: TaskStatus) => {
     // Store previous state for rollback
@@ -91,6 +102,32 @@ export function Board() {
       // Rollback on error
       setTasks(previousTasks);
       console.error('Failed to delete task:', error);
+    }
+  };
+
+  // Update task
+  const handleUpdateTask = async (taskId: string, updates: Partial<Task>) => {
+    const previousTasks = tasks;
+
+    // Optimistic update
+    setTasks((prev) =>
+      prev.map((task) =>
+        task.id === taskId
+          ? { ...task, ...updates, updatedAt: new Date() }
+          : task
+      )
+    );
+
+    try {
+      const res = await fetch(`${API_URL}/${taskId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      if (!res.ok) throw new Error('Failed to update');
+    } catch (error) {
+      setTasks(previousTasks);
+      console.error('Failed to update task:', error);
     }
   };
 
@@ -292,6 +329,7 @@ export function Board() {
           task={selectedTask}
           onClose={handleCloseModal}
           onDelete={handleDelete}
+          onUpdate={handleUpdateTask}
         />
       )}
     </div>
