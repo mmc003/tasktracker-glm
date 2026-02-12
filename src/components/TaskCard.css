@@ -1,0 +1,77 @@
+.task-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 8px;
+  cursor: grab;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.task-card:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-light);
+}
+
+.task-card:active {
+  cursor: grabbing;
+}
+
+.task-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.priority-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.priority-indicator.low {
+  background: var(--priority-low);
+}
+
+.priority-indicator.medium {
+  background: var(--priority-medium);
+}
+
+.priority-indicator.high {
+  background: var(--priority-high);
+}
+
+.delete-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-faint);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.delete-btn:hover {
+  color: var(--text-primary);
+}
+
+.task-title {
+  margin: 0 0 6px 0;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+
+.task-description {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.task-assignee {
+  font-size: 11px;
+  color: var(--text-faint);
+}
