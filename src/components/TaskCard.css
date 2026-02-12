@@ -17,6 +17,16 @@
   cursor: grabbing;
 }
 
+.task-card.shift-hover {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.task-card.shift-hover:hover {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+}
+
 .task-card-header {
   display: flex;
   align-items: center;

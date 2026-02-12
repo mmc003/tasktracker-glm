@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type { Task, TaskStatus, TaskPriority } from '../types/Task';
 import { TaskModal } from '../components/TaskModal';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { ContextMenu } from '../components/ContextMenu';
 import './Tasks.css';
 
 const API_URL = 'http://localhost:3001/api/tasks';
@@ -13,7 +14,9 @@ export function Tasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [startEditing, setStartEditing] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; task: Task } | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<TaskStatus | ''>('');
   const [priorityFilter, setPriorityFilter] = useState<TaskPriority | ''>('');
@@ -251,15 +254,18 @@ export function Tasks() {
             </thead>
             <tbody>
               {filteredTasks.map((task) => (
-                <tr key={task.id}>
+                <tr
+                  key={task.id}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    setContextMenu({ x: e.clientX, y: e.clientY, task });
+                  }}
+                >
                   <td
                     className="task-title"
-                    onClick={(e) => {
-                      if (e.shiftKey) {
-                        handleDeleteRequest(task.id);
-                      } else {
-                        setSelectedTask(task);
-                      }
+                    onClick={() => {
+                      setSelectedTask(task);
+                      setStartEditing(false);
                     }}
                   >
                     {task.title}
@@ -286,9 +292,13 @@ export function Tasks() {
       {selectedTask && (
         <TaskModal
           task={selectedTask}
-          onClose={() => setSelectedTask(null)}
+          onClose={() => {
+            setSelectedTask(null);
+            setStartEditing(false);
+          }}
           onDelete={handleDeleteRequest}
           onUpdate={handleUpdateTask}
+          startEditing={startEditing}
         />
       )}
 
@@ -297,6 +307,23 @@ export function Tasks() {
           message={`Delete "${taskToDelete.title}"? This action cannot be undone.`}
           onConfirm={handleConfirmDelete}
           onCancel={handleCancelDelete}
+        />
+      )}
+
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onEdit={() => {
+            setSelectedTask(contextMenu.task);
+            setStartEditing(true);
+            setContextMenu(null);
+          }}
+          onDelete={() => {
+            handleDeleteRequest(contextMenu.task.id);
+            setContextMenu(null);
+          }}
+          onClose={() => setContextMenu(null)}
         />
       )}
     </div>

@@ -19,9 +19,8 @@ export function Board() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
-  const [sourceStatus, setSourceStatus] = useState<TaskStatus | null>(null);
-  const [dragOverStatus, setDragOverStatus] = useState<TaskStatus | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [startEditing, setStartEditing] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [newTask, setNewTask] = useState({
     title: '',
@@ -141,32 +140,16 @@ export function Board() {
 
   const handleDragStart = (taskId: string) => {
     setDraggedTaskId(taskId);
-    const task = tasks.find((t) => t.id === taskId);
-    if (task) {
-      setSourceStatus(task.status);
-    }
   };
 
   const handleDragEnd = () => {
     setDraggedTaskId(null);
-    setSourceStatus(null);
-    setDragOverStatus(null);
-  };
-
-  const handleDragEnter = (status: TaskStatus) => {
-    setDragOverStatus(status);
-  };
-
-  const handleDragLeave = () => {
-    setDragOverStatus(null);
   };
 
   const handleDrop = (newStatus: TaskStatus) => {
     if (draggedTaskId) {
       handleStatusChange(draggedTaskId, newStatus);
       setDraggedTaskId(null);
-      setSourceStatus(null);
-      setDragOverStatus(null);
     }
   };
 
@@ -220,10 +203,17 @@ export function Board() {
 
   const handleOpenModal = (task: Task) => {
     setSelectedTask(task);
+    setStartEditing(false);
+  };
+
+  const handleOpenModalEdit = (task: Task) => {
+    setSelectedTask(task);
+    setStartEditing(true);
   };
 
   const handleCloseModal = () => {
     setSelectedTask(null);
+    setStartEditing(false);
   };
 
   const handleDeleteRequest = (taskId: string) => {
@@ -243,6 +233,11 @@ export function Board() {
 
   const handleCancelDelete = () => {
     setTaskToDelete(null);
+  };
+
+  // Immediate delete without confirmation (shift+click)
+  const handleImmediateDelete = async (taskId: string) => {
+    await handleDelete(taskId);
   };
 
   // Get unique assignees for filter dropdown
@@ -337,12 +332,10 @@ export function Board() {
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             onDrop={handleDrop}
-            onDragEnter={handleDragEnter}
-            onDragLeave={handleDragLeave}
-            isDragOver={dragOverStatus === column.status && sourceStatus !== column.status}
-            isDragging={!!draggedTaskId}
             onOpenModal={handleOpenModal}
+            onOpenModalEdit={handleOpenModalEdit}
             onDelete={handleDeleteRequest}
+            onImmediateDelete={handleImmediateDelete}
           />
         ))}
       </div>
@@ -424,6 +417,7 @@ export function Board() {
           onClose={handleCloseModal}
           onDelete={handleDeleteRequest}
           onUpdate={handleUpdateTask}
+          startEditing={startEditing}
         />
       )}
 

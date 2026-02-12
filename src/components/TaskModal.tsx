@@ -7,6 +7,7 @@ interface TaskModalProps {
   onClose: () => void;
   onDelete: (taskId: string) => void;
   onUpdate: (taskId: string, updates: Partial<Task>) => void;
+  startEditing?: boolean;
 }
 
 const statusColors: Record<Task['status'], { bg: string; label: string }> = {
@@ -16,8 +17,8 @@ const statusColors: Record<Task['status'], { bg: string; label: string }> = {
   'done': { bg: '#22c55e', label: 'Done' },
 };
 
-export function TaskModal({ task, onClose, onDelete, onUpdate }: TaskModalProps) {
-  const [isEditing, setIsEditing] = useState(false);
+export function TaskModal({ task, onClose, onDelete, onUpdate, startEditing = false }: TaskModalProps) {
+  const [isEditing, setIsEditing] = useState(startEditing);
   const [editForm, setEditForm] = useState({
     title: task.title,
     description: task.description || '',
