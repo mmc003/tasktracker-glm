@@ -1,56 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { Task, TaskStatus, TaskPriority } from '../types/Task';
 import { Column } from './Column';
 import './Board.css';
 
-const initialTasks: Task[] = [
-  {
-    id: '1',
-    title: 'Set up project structure',
-    description: 'Initialize React app with TypeScript',
-    status: 'done',
-    priority: 'high',
-    assignee: 'john',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: '2',
-    title: 'Create API endpoints',
-    description: 'Design and implement REST API for tasks',
-    status: 'in-progress',
-    priority: 'high',
-    assignee: 'jane',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: '3',
-    title: 'Write unit tests',
-    status: 'todo',
-    priority: 'medium',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: '4',
-    title: 'Update documentation',
-    status: 'todo',
-    priority: 'low',
-    assignee: 'bob',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: '5',
-    title: 'Code review PR #42',
-    status: 'in-review',
-    priority: 'medium',
-    assignee: 'alice',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-];
+const API_URL = 'http://localhost:3001/api/tasks';
 
 const columns: { status: TaskStatus; title: string }[] = [
   { status: 'todo', title: 'To Do' },
@@ -60,7 +13,8 @@ const columns: { status: TaskStatus; title: string }[] = [
 ];
 
 export function Board() {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [sourceStatus, setSourceStatus] = useState<TaskStatus | null>(null);
@@ -72,18 +26,53 @@ export function Board() {
     assignee: '',
   });
 
-  const handleStatusChange = (taskId: string, newStatus: TaskStatus) => {
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.id === taskId
-          ? { ...task, status: newStatus, updatedAt: new Date() }
-          : task
-      )
-    );
+  const fetchTasks = useCallback(async () => {
+    try {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      setTasks(data.map((t: Task) => ({
+        ...t,
+        createdAt: new Date(t.createdAt),
+        updatedAt: new Date(t.updatedAt),
+      })));
+    } catch (error) {
+      console.error('Failed to fetch tasks:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
+
+  const handleStatusChange = async (taskId: string, newStatus: TaskStatus) => {
+    try {
+      const res = await fetch(`${API_URL}/${taskId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      const updatedTask = await res.json();
+      setTasks((prev) =>
+        prev.map((task) =>
+          task.id === taskId
+            ? { ...updatedTask, createdAt: new Date(updatedTask.createdAt), updatedAt: new Date(updatedTask.updatedAt) }
+            : task
+        )
+      );
+    } catch (error) {
+      console.error('Failed to update task:', error);
+    }
   };
 
-  const handleDelete = (taskId: string) => {
-    setTasks((prev) => prev.filter((task) => task.id !== taskId));
+  const handleDelete = async (taskId: string) => {
+    try {
+      await fetch(`${API_URL}/${taskId}`, { method: 'DELETE' });
+      setTasks((prev) => prev.filter((task) => task.id !== taskId));
+    } catch (error) {
+      console.error('Failed to delete task:', error);
+    }
   };
 
   const handleDragStart = (taskId: string) => {
@@ -112,35 +101,43 @@ export function Board() {
     if (draggedTaskId) {
       handleStatusChange(draggedTaskId, newStatus);
       setDraggedTaskId(null);
+      setSourceStatus(null);
       setDragOverStatus(null);
     }
   };
 
-  const handleCreateTask = (e: React.FormEvent) => {
+  const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTask.title.trim()) return;
 
-    const task: Task = {
-      id: Date.now().toString(),
-      title: newTask.title,
-      description: newTask.description || undefined,
-      status: 'todo',
-      priority: newTask.priority,
-      assignee: newTask.assignee || undefined,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    setTasks((prev) => [...prev, task]);
-    setNewTask({ title: '', description: '', priority: 'medium', assignee: '' });
-    setShowForm(false);
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTask),
+      });
+      const createdTask = await res.json();
+      setTasks((prev) => [...prev, {
+        ...createdTask,
+        createdAt: new Date(createdTask.createdAt),
+        updatedAt: new Date(createdTask.updatedAt),
+      }]);
+      setNewTask({ title: '', description: '', priority: 'medium', assignee: '' });
+      setShowForm(false);
+    } catch (error) {
+      console.error('Failed to create task:', error);
+    }
   };
+
+  if (loading) {
+    return <div className="board">Loading...</div>;
+  }
 
   return (
     <div className="board">
       <div className="board-header">
         <button className="add-task-btn" onClick={() => setShowForm(!showForm)}>
-          + Add Task
+          + New Task
         </button>
       </div>
 

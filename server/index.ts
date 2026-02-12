@@ -1,8 +1,11 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
+import fs from 'fs';
+import path from 'path';
 
 const app = express();
 const PORT = 3001;
+const DB_PATH = path.join(__dirname, '../db.json');
 
 app.use(cors());
 app.use(express.json());
@@ -11,52 +14,36 @@ interface Task {
   id: string;
   title: string;
   description?: string;
-  status: 'todo' | 'in-progress' | 'done';
+  status: 'todo' | 'in-progress' | 'in-review' | 'done';
   priority: 'low' | 'medium' | 'high';
   assignee?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
 
-let tasks: Task[] = [
-  {
-    id: '1',
-    title: 'Set up project structure',
-    description: 'Initialize React app with TypeScript',
-    status: 'done',
-    priority: 'high',
-    assignee: 'john',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: '2',
-    title: 'Create API endpoints',
-    description: 'Design and implement REST API for tasks',
-    status: 'in-progress',
-    priority: 'high',
-    assignee: 'jane',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: '3',
-    title: 'Write unit tests',
-    status: 'todo',
-    priority: 'medium',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-];
+interface DB {
+  tasks: Task[];
+}
+
+function readDB(): DB {
+  const data = fs.readFileSync(DB_PATH, 'utf-8');
+  return JSON.parse(data);
+}
+
+function writeDB(db: DB): void {
+  fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
+}
 
 // Get all tasks
 app.get('/api/tasks', (_req: Request, res: Response) => {
-  res.json(tasks);
+  const db = readDB();
+  res.json(db.tasks);
 });
 
 // Get single task
 app.get('/api/tasks/:id', (req: Request, res: Response) => {
-  const task = tasks.find((t) => t.id === req.params.id);
+  const db = readDB();
+  const task = db.tasks.find((t) => t.id === req.params.id);
   if (!task) {
     return res.status(404).json({ error: 'Task not found' });
   }
@@ -71,6 +58,9 @@ app.post('/api/tasks', (req: Request, res: Response) => {
     return res.status(400).json({ error: 'Title is required' });
   }
 
+  const db = readDB();
+  const now = new Date().toISOString();
+
   const newTask: Task = {
     id: Date.now().toString(),
     title,
@@ -78,11 +68,12 @@ app.post('/api/tasks', (req: Request, res: Response) => {
     status: 'todo',
     priority: priority || 'medium',
     assignee,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: now,
+    updatedAt: now,
   };
 
-  tasks.push(newTask);
+  db.tasks.push(newTask);
+  writeDB(db);
   res.status(201).json(newTask);
 });
 
@@ -91,34 +82,38 @@ app.put('/api/tasks/:id', (req: Request, res: Response) => {
   const { id } = req.params;
   const { title, description, status, priority, assignee } = req.body;
 
-  const taskIndex = tasks.findIndex((t) => t.id === id);
+  const db = readDB();
+  const taskIndex = db.tasks.findIndex((t) => t.id === id);
   if (taskIndex === -1) {
     return res.status(404).json({ error: 'Task not found' });
   }
 
-  tasks[taskIndex] = {
-    ...tasks[taskIndex],
-    title: title ?? tasks[taskIndex].title,
-    description: description ?? tasks[taskIndex].description,
-    status: status ?? tasks[taskIndex].status,
-    priority: priority ?? tasks[taskIndex].priority,
-    assignee: assignee ?? tasks[taskIndex].assignee,
-    updatedAt: new Date(),
+  db.tasks[taskIndex] = {
+    ...db.tasks[taskIndex],
+    title: title ?? db.tasks[taskIndex].title,
+    description: description ?? db.tasks[taskIndex].description,
+    status: status ?? db.tasks[taskIndex].status,
+    priority: priority ?? db.tasks[taskIndex].priority,
+    assignee: assignee ?? db.tasks[taskIndex].assignee,
+    updatedAt: new Date().toISOString(),
   };
 
-  res.json(tasks[taskIndex]);
+  writeDB(db);
+  res.json(db.tasks[taskIndex]);
 });
 
 // Delete task
 app.delete('/api/tasks/:id', (req: Request, res: Response) => {
   const { id } = req.params;
-  const taskIndex = tasks.findIndex((t) => t.id === id);
+  const db = readDB();
+  const taskIndex = db.tasks.findIndex((t) => t.id === id);
 
   if (taskIndex === -1) {
     return res.status(404).json({ error: 'Task not found' });
   }
 
-  tasks.splice(taskIndex, 1);
+  db.tasks.splice(taskIndex, 1);
+  writeDB(db);
   res.status(204).send();
 });
 

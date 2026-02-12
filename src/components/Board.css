@@ -7,6 +7,8 @@
 .board-header {
   padding: 12px 16px;
   border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
 }
 
 .add-task-btn {

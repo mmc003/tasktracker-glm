@@ -1,0 +1,50 @@
+{
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Set up project structure",
+      "description": "Initialize React app with TypeScript",
+      "status": "done",
+      "priority": "high",
+      "assignee": "john",
+      "createdAt": "2026-02-12T00:00:00.000Z",
+      "updatedAt": "2026-02-12T00:00:00.000Z"
+    },
+    {
+      "id": "2",
+      "title": "Create API endpoints",
+      "description": "Design and implement REST API for tasks",
+      "status": "in-progress",
+      "priority": "high",
+      "assignee": "jane",
+      "createdAt": "2026-02-12T00:00:00.000Z",
+      "updatedAt": "2026-02-12T00:00:00.000Z"
+    },
+    {
+      "id": "3",
+      "title": "Write unit tests",
+      "status": "todo",
+      "priority": "medium",
+      "createdAt": "2026-02-12T00:00:00.000Z",
+      "updatedAt": "2026-02-12T00:00:00.000Z"
+    },
+    {
+      "id": "4",
+      "title": "Update documentation",
+      "status": "todo",
+      "priority": "low",
+      "assignee": "bob",
+      "createdAt": "2026-02-12T00:00:00.000Z",
+      "updatedAt": "2026-02-12T00:00:00.000Z"
+    },
+    {
+      "id": "5",
+      "title": "Code review PR #42",
+      "status": "in-review",
+      "priority": "medium",
+      "assignee": "alice",
+      "createdAt": "2026-02-12T00:00:00.000Z",
+      "updatedAt": "2026-02-12T00:00:00.000Z"
+    }
+  ]
+}
