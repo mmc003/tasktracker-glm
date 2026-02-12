@@ -4,11 +4,11 @@
       "id": "1",
       "title": "Set up project structure",
       "description": "Initialize React app with TypeScript",
-      "status": "done",
+      "status": "in-review",
       "priority": "high",
       "assignee": "john",
       "createdAt": "2026-02-12T00:00:00.000Z",
-      "updatedAt": "2026-02-12T00:00:00.000Z"
+      "updatedAt": "2026-02-12T10:17:30.890Z"
     },
     {
       "id": "2",
@@ -18,7 +18,7 @@
       "priority": "high",
       "assignee": "jane",
       "createdAt": "2026-02-12T00:00:00.000Z",
-      "updatedAt": "2026-02-12T00:00:00.000Z"
+      "updatedAt": "2026-02-12T10:17:31.916Z"
     },
     {
       "id": "3",
@@ -26,25 +26,16 @@
       "status": "todo",
       "priority": "medium",
       "createdAt": "2026-02-12T00:00:00.000Z",
-      "updatedAt": "2026-02-12T00:00:00.000Z"
-    },
-    {
-      "id": "4",
-      "title": "Update documentation",
-      "status": "todo",
-      "priority": "low",
-      "assignee": "bob",
-      "createdAt": "2026-02-12T00:00:00.000Z",
-      "updatedAt": "2026-02-12T00:00:00.000Z"
+      "updatedAt": "2026-02-12T10:17:36.455Z"
     },
     {
       "id": "5",
       "title": "Code review PR #42",
-      "status": "in-review",
+      "status": "todo",
       "priority": "medium",
       "assignee": "alice",
       "createdAt": "2026-02-12T00:00:00.000Z",
-      "updatedAt": "2026-02-12T00:00:00.000Z"
+      "updatedAt": "2026-02-12T10:19:10.349Z"
     }
   ]
 }

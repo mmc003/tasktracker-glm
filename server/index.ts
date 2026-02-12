@@ -2,6 +2,10 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 3001;
@@ -17,6 +21,7 @@ interface Task {
   status: 'todo' | 'in-progress' | 'in-review' | 'done';
   priority: 'low' | 'medium' | 'high';
   assignee?: string;
+  dueDate?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -52,7 +57,7 @@ app.get('/api/tasks/:id', (req: Request, res: Response) => {
 
 // Create task
 app.post('/api/tasks', (req: Request, res: Response) => {
-  const { title, description, priority, assignee } = req.body;
+  const { title, description, priority, assignee, dueDate } = req.body;
 
   if (!title) {
     return res.status(400).json({ error: 'Title is required' });
@@ -68,6 +73,7 @@ app.post('/api/tasks', (req: Request, res: Response) => {
     status: 'todo',
     priority: priority || 'medium',
     assignee,
+    dueDate,
     createdAt: now,
     updatedAt: now,
   };

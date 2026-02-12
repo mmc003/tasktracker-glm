@@ -8,8 +8,8 @@ export function Navbar() {
   return (
     <nav className="navbar">
       <div className="navbar-logo">
-        <span className="logo-icon">T</span>
-        <span className="logo-text">TaskFlow</span>
+        {/* <span className="logo-icon">T</span> */}
+        <span className="logo-text">Task Tracker</span>
       </div>
       <div className="navbar-right">
         <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">

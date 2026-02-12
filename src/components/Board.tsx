@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Task, TaskStatus, TaskPriority } from '../types/Task';
 import { Column } from './Column';
+import { TaskModal } from './TaskModal';
 import './Board.css';
 
 const API_URL = 'http://localhost:3001/api/tasks';
@@ -19,11 +20,13 @@ export function Board() {
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [sourceStatus, setSourceStatus] = useState<TaskStatus | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<TaskStatus | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
     priority: 'medium' as TaskPriority,
     assignee: '',
+    dueDate: '',
   });
 
   const fetchTasks = useCallback(async () => {
@@ -46,31 +49,47 @@ export function Board() {
     fetchTasks();
   }, [fetchTasks]);
 
+  // Optimistic status change
   const handleStatusChange = async (taskId: string, newStatus: TaskStatus) => {
+    // Store previous state for rollback
+    const previousTasks = tasks;
+
+    // Optimistic update
+    setTasks((prev) =>
+      prev.map((task) =>
+        task.id === taskId
+          ? { ...task, status: newStatus, updatedAt: new Date() }
+          : task
+      )
+    );
+
     try {
       const res = await fetch(`${API_URL}/${taskId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
       });
-      const updatedTask = await res.json();
-      setTasks((prev) =>
-        prev.map((task) =>
-          task.id === taskId
-            ? { ...updatedTask, createdAt: new Date(updatedTask.createdAt), updatedAt: new Date(updatedTask.updatedAt) }
-            : task
-        )
-      );
+      if (!res.ok) throw new Error('Failed to update');
     } catch (error) {
+      // Rollback on error
+      setTasks(previousTasks);
       console.error('Failed to update task:', error);
     }
   };
 
+  // Optimistic delete
   const handleDelete = async (taskId: string) => {
+    const previousTasks = tasks;
+
+    // Optimistic update
+    setTasks((prev) => prev.filter((task) => task.id !== taskId));
+
     try {
-      await fetch(`${API_URL}/${taskId}`, { method: 'DELETE' });
-      setTasks((prev) => prev.filter((task) => task.id !== taskId));
+      const res = await fetch(`${API_URL}/${taskId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete');
     } catch (error) {
+      // Rollback on error
+      setTasks(previousTasks);
       console.error('Failed to delete task:', error);
     }
   };
@@ -106,9 +125,30 @@ export function Board() {
     }
   };
 
+  // Optimistic create
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTask.title.trim()) return;
+
+    const tempId = `temp-${Date.now()}`;
+    const now = new Date();
+
+    // Optimistic update with temp task
+    const optimisticTask: Task = {
+      id: tempId,
+      title: newTask.title,
+      description: newTask.description || undefined,
+      status: 'todo',
+      priority: newTask.priority,
+      assignee: newTask.assignee || undefined,
+      dueDate: newTask.dueDate || undefined,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    setTasks((prev) => [...prev, optimisticTask]);
+    setNewTask({ title: '', description: '', priority: 'medium', assignee: '', dueDate: '' });
+    setShowForm(false);
 
     try {
       const res = await fetch(API_URL, {
@@ -117,70 +157,45 @@ export function Board() {
         body: JSON.stringify(newTask),
       });
       const createdTask = await res.json();
-      setTasks((prev) => [...prev, {
-        ...createdTask,
-        createdAt: new Date(createdTask.createdAt),
-        updatedAt: new Date(createdTask.updatedAt),
-      }]);
-      setNewTask({ title: '', description: '', priority: 'medium', assignee: '' });
-      setShowForm(false);
+
+      // Replace temp task with real task
+      setTasks((prev) =>
+        prev.map((task) =>
+          task.id === tempId
+            ? { ...createdTask, createdAt: new Date(createdTask.createdAt), updatedAt: new Date(createdTask.updatedAt) }
+            : task
+        )
+      );
     } catch (error) {
+      // Remove temp task on error
+      setTasks((prev) => prev.filter((task) => task.id !== tempId));
       console.error('Failed to create task:', error);
     }
   };
 
+  const handleOpenModal = (task: Task) => {
+    setSelectedTask(task);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedTask(null);
+  };
+
   if (loading) {
-    return <div className="board">Loading...</div>;
+    return (
+      <div className="board-loading">
+        <div className="loading-spinner"></div>
+      </div>
+    );
   }
 
   return (
     <div className="board">
       <div className="board-header">
-        <button className="add-task-btn" onClick={() => setShowForm(!showForm)}>
+        <button className="add-task-btn" onClick={() => setShowForm(true)}>
           + New Task
         </button>
       </div>
-
-      {showForm && (
-        <form className="task-form" onSubmit={handleCreateTask}>
-          <input
-            type="text"
-            placeholder="Task title"
-            value={newTask.title}
-            onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-            required
-          />
-          <textarea
-            placeholder="Description (optional)"
-            value={newTask.description}
-            onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-          />
-          <div className="form-row">
-            <select
-              value={newTask.priority}
-              onChange={(e) =>
-                setNewTask({ ...newTask, priority: e.target.value as TaskPriority })
-              }
-            >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
-            <input
-              type="text"
-              placeholder="Assignee"
-              value={newTask.assignee}
-              onChange={(e) => setNewTask({ ...newTask, assignee: e.target.value })}
-            />
-          </div>
-          <div className="form-actions">
-            <button type="submit">Create</button>
-            <button type="button" onClick={() => setShowForm(false)}>
-              Cancel
-            </button>
-          </div>
-        </form>
-      )}
 
       <div className="board-columns">
         {columns.map((column) => (
@@ -189,7 +204,6 @@ export function Board() {
             title={column.title}
             status={column.status}
             tasks={tasks.filter((t) => t.status === column.status)}
-            onDelete={handleDelete}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             onDrop={handleDrop}
@@ -197,9 +211,89 @@ export function Board() {
             onDragLeave={handleDragLeave}
             isDragOver={dragOverStatus === column.status && sourceStatus !== column.status}
             isDragging={!!draggedTaskId}
+            onOpenModal={handleOpenModal}
           />
         ))}
       </div>
+
+      {showForm && (
+        <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && setShowForm(false)}>
+          <div className="modal">
+            <div className="modal-header">
+              <div className="modal-status" style={{ backgroundColor: '#3b82f6' }}>New Task</div>
+              <button className="modal-close" onClick={() => setShowForm(false)}>×</button>
+            </div>
+            <form onSubmit={handleCreateTask}>
+              <div className="modal-body">
+                <div className="modal-section">
+                  <span className="modal-label">Title</span>
+                  <input
+                    type="text"
+                    className="modal-input"
+                    placeholder="Task title"
+                    value={newTask.title}
+                    onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="modal-section">
+                  <span className="modal-label">Description</span>
+                  <textarea
+                    className="modal-textarea"
+                    placeholder="Description (optional)"
+                    value={newTask.description}
+                    onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                  />
+                </div>
+                <div className="modal-grid">
+                  <div className="modal-section">
+                    <span className="modal-label">Priority</span>
+                    <select
+                      className="modal-select"
+                      value={newTask.priority}
+                      onChange={(e) => setNewTask({ ...newTask, priority: e.target.value as TaskPriority })}
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
+                  </div>
+                  <div className="modal-section">
+                    <span className="modal-label">Assignee</span>
+                    <input
+                      type="text"
+                      className="modal-input"
+                      placeholder="Assignee"
+                      value={newTask.assignee}
+                      onChange={(e) => setNewTask({ ...newTask, assignee: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="modal-section">
+                  <span className="modal-label">Due Date</span>
+                  <input
+                    type="date"
+                    className="modal-input"
+                    value={newTask.dueDate}
+                    onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="submit" className="modal-create-btn">Create Task</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {selectedTask && (
+        <TaskModal
+          task={selectedTask}
+          onClose={handleCloseModal}
+          onDelete={handleDelete}
+        />
+      )}
     </div>
   );
 }

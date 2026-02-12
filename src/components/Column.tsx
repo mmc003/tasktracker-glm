@@ -7,7 +7,6 @@ interface ColumnProps {
   title: string;
   status: TaskStatus;
   tasks: Task[];
-  onDelete: (taskId: string) => void;
   onDragStart: (taskId: string) => void;
   onDragEnd: () => void;
   onDrop: (status: TaskStatus) => void;
@@ -15,13 +14,13 @@ interface ColumnProps {
   onDragLeave: () => void;
   isDragOver: boolean;
   isDragging: boolean;
+  onOpenModal: (task: Task) => void;
 }
 
 export function Column({
   title,
   status,
   tasks,
-  onDelete,
   onDragStart,
   onDragEnd,
   onDrop,
@@ -29,6 +28,7 @@ export function Column({
   onDragLeave,
   isDragOver,
   isDragging,
+  onOpenModal,
 }: ColumnProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const [localDragOver, setLocalDragOver] = useState(false);
@@ -48,7 +48,6 @@ export function Column({
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // Check if we're leaving the content area entirely
     const rect = contentRef.current?.getBoundingClientRect();
     if (rect) {
       const x = e.clientX;
@@ -89,9 +88,9 @@ export function Column({
           <TaskCard
             key={task.id}
             task={task}
-            onDelete={onDelete}
             onDragStart={onDragStart}
             onDragEnd={handleDragEnd}
+            onOpenModal={onOpenModal}
           />
         ))}
         {tasks.length === 0 && <div className="column-placeholder">Drop tasks here</div>}
