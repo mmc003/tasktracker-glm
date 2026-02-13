@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { Task, TaskStatus } from '../types/Task';
 import { TaskCard } from './TaskCard';
 import './Column.css';
@@ -33,18 +33,20 @@ export function Column({
   onImmediateDelete,
 }: ColumnProps) {
   const [isDragOver, setIsDragOver] = useState(false);
+  const dragCounterRef = useRef(0);
 
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragOver(true);
+    dragCounterRef.current++;
+    if (dragCounterRef.current === 1) {
+      setIsDragOver(true);
+    }
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
-    // Only set false if leaving the column-content entirely
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX;
-    const y = e.clientY;
-    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+    e.preventDefault();
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) {
       setIsDragOver(false);
     }
   };
@@ -56,6 +58,7 @@ export function Column({
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    dragCounterRef.current = 0;
     setIsDragOver(false);
     onDrop(status);
   };

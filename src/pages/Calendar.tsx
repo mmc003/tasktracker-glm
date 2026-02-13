@@ -572,7 +572,13 @@ export function Calendar() {
             {expandedDay.tasks.map(task => (
               <div
                 key={task.id}
-                className={`calendar-task status-${task.status}`}
+                className={`calendar-task status-${task.status} ${draggedTask?.id === task.id ? 'dragging' : ''}`}
+                draggable
+                onDragStart={(e) => {
+                  handleDragStart(e, task);
+                  setTimeout(handleCloseExpanded, 0);
+                }}
+                onDragEnd={handleDragEnd}
                 onClick={() => {
                   setSelectedTask(task);
                   handleCloseExpanded();
