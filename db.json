@@ -1,54 +1,26 @@
 {
   "tasks": [
     {
-      "id": "3",
-      "title": "Write unit tests",
-      "status": "todo",
-      "priority": "medium",
-      "createdAt": "2026-02-12T00:00:00.000Z",
-      "updatedAt": "2026-02-12T10:17:36.455Z"
-    },
-    {
-      "id": "5",
-      "title": "Code review PR #42",
-      "status": "todo",
-      "priority": "medium",
-      "assignee": "alice",
-      "createdAt": "2026-02-12T00:00:00.000Z",
-      "updatedAt": "2026-02-12T12:39:41.202Z"
-    },
-    {
       "id": "1770899934946",
       "title": "someway to clear done",
       "description": "some how clear done and keep track of cleared done tasks",
       "status": "todo",
       "priority": "medium",
       "assignee": "",
-      "dueDate": "2026-02-13",
+      "dueDate": "2026-02-14",
       "createdAt": "2026-02-12T12:38:54.946Z",
-      "updatedAt": "2026-02-12T12:41:13.562Z"
+      "updatedAt": "2026-02-13T05:26:55.009Z"
     },
     {
       "id": "1770900903479",
       "title": "test to delete",
       "description": "",
-      "status": "in-review",
+      "status": "done",
       "priority": "medium",
       "assignee": "",
-      "dueDate": "",
+      "dueDate": "2026-02-13",
       "createdAt": "2026-02-12T12:55:03.479Z",
-      "updatedAt": "2026-02-12T16:17:52.062Z"
-    },
-    {
-      "id": "1770913085924",
-      "title": "fix drag borders",
-      "description": "",
-      "status": "in-progress",
-      "priority": "medium",
-      "assignee": "",
-      "dueDate": "2026-02-14",
-      "createdAt": "2026-02-12T16:18:05.924Z",
-      "updatedAt": "2026-02-12T16:18:42.913Z"
+      "updatedAt": "2026-02-13T06:13:15.172Z"
     },
     {
       "id": "1770913145424",
@@ -59,7 +31,40 @@
       "assignee": "",
       "dueDate": "2026-02-14",
       "createdAt": "2026-02-12T16:19:05.424Z",
-      "updatedAt": "2026-02-12T16:19:29.484Z"
+      "updatedAt": "2026-02-13T06:31:37.303Z"
+    },
+    {
+      "id": "1770957165911",
+      "title": "calendar basic implement",
+      "description": "",
+      "status": "in-review",
+      "priority": "medium",
+      "assignee": "",
+      "dueDate": "2026-02-14",
+      "createdAt": "2026-02-13T04:32:45.911Z",
+      "updatedAt": "2026-02-13T05:26:59.174Z"
+    },
+    {
+      "id": "1770957200569",
+      "title": "calendar drag",
+      "description": "drag dates\noverflow per date\ninteraction with tasks",
+      "status": "done",
+      "priority": "medium",
+      "assignee": "",
+      "dueDate": "2026-02-14",
+      "createdAt": "2026-02-13T04:33:20.569Z",
+      "updatedAt": "2026-02-13T05:26:57.921Z"
+    },
+    {
+      "id": "1770959342839",
+      "title": "fix border drag",
+      "description": "",
+      "status": "in-progress",
+      "priority": "medium",
+      "assignee": "",
+      "dueDate": "2026-02-14",
+      "createdAt": "2026-02-13T05:09:02.839Z",
+      "updatedAt": "2026-02-13T05:10:42.954Z"
     }
   ]
 }

@@ -37,6 +37,9 @@ export function ConfirmDialog({
     <div className="confirm-backdrop" onClick={onCancel}>
       <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
         <p className="confirm-message">{message}</p>
+        <p className="confirm-tip">
+          <kbd>Shift</kbd> + click to skip
+        </p>
         <div className="confirm-actions">
           <button className="confirm-cancel" onClick={onCancel}>
             {cancelLabel}

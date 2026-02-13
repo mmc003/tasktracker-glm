@@ -3,6 +3,7 @@ import type { Task, TaskStatus, TaskPriority } from '../types/Task';
 import { Column } from './Column';
 import { TaskModal } from './TaskModal';
 import { ConfirmDialog } from './ConfirmDialog';
+import { features } from '../config/features';
 import './Board.css';
 
 const API_URL = 'http://localhost:3001/api/tasks';
@@ -240,8 +241,27 @@ export function Board() {
     await handleDelete(taskId);
   };
 
+  // Duplicate task
+  const handleDuplicate = async (taskId: string) => {
+    try {
+      const res = await fetch(`${API_URL}/${taskId}/duplicate`, {
+        method: 'POST',
+      });
+      if (!res.ok) throw new Error('Failed to duplicate');
+      const newTask = await res.json();
+
+      setTasks((prev) => [...prev, {
+        ...newTask,
+        createdAt: new Date(newTask.createdAt),
+        updatedAt: new Date(newTask.updatedAt),
+      }]);
+    } catch (error) {
+      console.error('Failed to duplicate task:', error);
+    }
+  };
+
   // Get unique assignees for filter dropdown
-  const assignees = [...new Set(tasks.map((t) => t.assignee).filter(Boolean))];
+  const assignees = features.assignees ? [...new Set(tasks.map((t) => t.assignee).filter(Boolean))] : [];
 
   // Filter tasks
   const filteredTasks = tasks.filter((task) => {
@@ -250,7 +270,7 @@ export function Board() {
       (task.description?.toLowerCase().includes(search.toLowerCase()) ?? false);
     const matchesStatus = statusFilter === '' || task.status === statusFilter;
     const matchesPriority = priorityFilter === '' || task.priority === priorityFilter;
-    const matchesAssignee = assigneeFilter === '' || task.assignee === assigneeFilter;
+    const matchesAssignee = !features.assignees || assigneeFilter === '' || task.assignee === assigneeFilter;
     return matchesSearch && matchesStatus && matchesPriority && matchesAssignee;
   });
 
@@ -301,17 +321,19 @@ export function Board() {
             <option value="medium">Medium</option>
             <option value="low">Low</option>
           </select>
-          <select
-            className="filter-select"
-            value={assigneeFilter}
-            onChange={(e) => setAssigneeFilter(e.target.value)}
-          >
-            <option value="">All Assignees</option>
-            {assignees.map((a) => (
-              <option key={a} value={a}>{a}</option>
-            ))}
-          </select>
-          {(search || statusFilter || priorityFilter || assigneeFilter) && (
+          {features.assignees && (
+            <select
+              className="filter-select"
+              value={assigneeFilter}
+              onChange={(e) => setAssigneeFilter(e.target.value)}
+            >
+              <option value="">All Assignees</option>
+              {assignees.map((a) => (
+                <option key={a} value={a}>{a}</option>
+              ))}
+            </select>
+          )}
+          {(search || statusFilter || priorityFilter || (features.assignees && assigneeFilter)) && (
             <button className="filter-clear" onClick={clearFilters}>
               Clear
             </button>
@@ -329,12 +351,14 @@ export function Board() {
             title={column.title}
             status={column.status}
             tasks={filteredTasks.filter((t) => t.status === column.status)}
+            draggedTaskId={draggedTaskId}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             onDrop={handleDrop}
             onOpenModal={handleOpenModal}
             onOpenModalEdit={handleOpenModalEdit}
             onDelete={handleDeleteRequest}
+            onDuplicate={handleDuplicate}
             onImmediateDelete={handleImmediateDelete}
           />
         ))}
@@ -382,16 +406,18 @@ export function Board() {
                       <option value="high">High</option>
                     </select>
                   </div>
-                  <div className="modal-section">
-                    <span className="modal-label">Assignee</span>
-                    <input
-                      type="text"
-                      className="modal-input"
-                      placeholder="Assignee"
-                      value={newTask.assignee}
-                      onChange={(e) => setNewTask({ ...newTask, assignee: e.target.value })}
-                    />
-                  </div>
+                  {features.assignees && (
+                    <div className="modal-section">
+                      <span className="modal-label">Assignee</span>
+                      <input
+                        type="text"
+                        className="modal-input"
+                        placeholder="Assignee"
+                        value={newTask.assignee}
+                        onChange={(e) => setNewTask({ ...newTask, assignee: e.target.value })}
+                      />
+                    </div>
+                  )}
                 </div>
                 <div className="modal-section">
                   <span className="modal-label">Due Date</span>

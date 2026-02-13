@@ -27,6 +27,11 @@
   background: rgba(239, 68, 68, 0.15);
 }
 
+.task-card.dragging {
+  opacity: 0.4;
+  border-style: dashed;
+}
+
 .task-card-header {
   display: flex;
   align-items: center;
@@ -79,7 +84,32 @@
   color: var(--text-primary);
 }
 
+.task-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .task-assignee {
   font-size: 11px;
   color: var(--text-faint);
+}
+
+.task-due-date {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--bg-secondary);
+}
+
+.task-due-date.soon {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.task-due-date.overdue {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
 }

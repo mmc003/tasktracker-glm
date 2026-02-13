@@ -86,7 +86,7 @@ app.post('/api/tasks', (req: Request, res: Response) => {
 // Update task
 app.put('/api/tasks/:id', (req: Request, res: Response) => {
   const { id } = req.params;
-  const { title, description, status, priority, assignee } = req.body;
+  const { title, description, status, priority, assignee, dueDate } = req.body;
 
   const db = readDB();
   const taskIndex = db.tasks.findIndex((t) => t.id === id);
@@ -101,6 +101,7 @@ app.put('/api/tasks/:id', (req: Request, res: Response) => {
     status: status ?? db.tasks[taskIndex].status,
     priority: priority ?? db.tasks[taskIndex].priority,
     assignee: assignee ?? db.tasks[taskIndex].assignee,
+    dueDate: dueDate !== undefined ? dueDate : db.tasks[taskIndex].dueDate,
     updatedAt: new Date().toISOString(),
   };
 
@@ -121,6 +122,48 @@ app.delete('/api/tasks/:id', (req: Request, res: Response) => {
   db.tasks.splice(taskIndex, 1);
   writeDB(db);
   res.status(204).send();
+});
+
+// Duplicate task
+app.post('/api/tasks/:id/duplicate', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const db = readDB();
+  const task = db.tasks.find((t) => t.id === id);
+
+  if (!task) {
+    return res.status(404).json({ error: 'Task not found' });
+  }
+
+  // Generate duplicate title: "title (n)" where n is the next available number
+  const baseTitle = task.title.replace(/\s*\(\d+\)$/, '');
+  const duplicatePattern = new RegExp(`^${baseTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\((\\d+)\\)$`);
+
+  const existingNumbers = db.tasks
+    .filter(t => t.title === baseTitle || duplicatePattern.test(t.title))
+    .map(t => {
+      const match = t.title.match(/\((\d+)\)$/);
+      return match ? parseInt(match[1], 10) : 0;
+    });
+
+  const nextNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1;
+  const newTitle = `${baseTitle} (${nextNumber})`;
+
+  const now = new Date().toISOString();
+  const newTask: Task = {
+    id: Date.now().toString(),
+    title: newTitle,
+    description: task.description,
+    status: 'todo',
+    priority: task.priority,
+    assignee: task.assignee,
+    dueDate: task.dueDate,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  db.tasks.push(newTask);
+  writeDB(db);
+  res.status(201).json(newTask);
 });
 
 app.listen(PORT, () => {

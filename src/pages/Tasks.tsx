@@ -3,6 +3,7 @@ import type { Task, TaskStatus, TaskPriority } from '../types/Task';
 import { TaskModal } from '../components/TaskModal';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { ContextMenu } from '../components/ContextMenu';
+import { features } from '../config/features';
 import './Tasks.css';
 
 const API_URL = 'http://localhost:3001/api/tasks';
@@ -116,7 +117,7 @@ export function Tasks() {
   };
 
   // Get unique assignees for filter dropdown
-  const assignees = [...new Set(tasks.map((t) => t.assignee).filter(Boolean))];
+  const assignees = features.assignees ? [...new Set(tasks.map((t) => t.assignee).filter(Boolean))] : [];
 
   // Filter and sort tasks
   const filteredTasks = tasks
@@ -126,7 +127,7 @@ export function Tasks() {
         (task.description?.toLowerCase().includes(search.toLowerCase()) ?? false);
       const matchesStatus = statusFilter === '' || task.status === statusFilter;
       const matchesPriority = priorityFilter === '' || task.priority === priorityFilter;
-      const matchesAssignee = assigneeFilter === '' || task.assignee === assigneeFilter;
+      const matchesAssignee = !features.assignees || assigneeFilter === '' || task.assignee === assigneeFilter;
       return matchesSearch && matchesStatus && matchesPriority && matchesAssignee;
     })
     .sort((a, b) => {
@@ -207,17 +208,19 @@ export function Tasks() {
             <option value="medium">Medium</option>
             <option value="low">Low</option>
           </select>
-          <select
-            className="filter-select"
-            value={assigneeFilter}
-            onChange={(e) => setAssigneeFilter(e.target.value)}
-          >
-            <option value="">All Assignees</option>
-            {assignees.map((a) => (
-              <option key={a} value={a}>{a}</option>
-            ))}
-          </select>
-          {(search || statusFilter || priorityFilter || assigneeFilter) && (
+          {features.assignees && (
+            <select
+              className="filter-select"
+              value={assigneeFilter}
+              onChange={(e) => setAssigneeFilter(e.target.value)}
+            >
+              <option value="">All Assignees</option>
+              {assignees.map((a) => (
+                <option key={a} value={a}>{a}</option>
+              ))}
+            </select>
+          )}
+          {(search || statusFilter || priorityFilter || (features.assignees && assigneeFilter)) && (
             <button className="filter-clear" onClick={clearFilters}>
               Clear
             </button>
@@ -244,9 +247,11 @@ export function Tasks() {
                 <th onClick={() => handleSort('priority')} className={sortField === 'priority' ? 'sorted' : ''}>
                   Priority {sortField === 'priority' && <span className="sort-indicator">{sortDirection === 'asc' ? '↑' : '↓'}</span>}
                 </th>
-                <th onClick={() => handleSort('assignee')} className={sortField === 'assignee' ? 'sorted' : ''}>
-                  Assignee {sortField === 'assignee' && <span className="sort-indicator">{sortDirection === 'asc' ? '↑' : '↓'}</span>}
-                </th>
+                {features.assignees && (
+                  <th onClick={() => handleSort('assignee')} className={sortField === 'assignee' ? 'sorted' : ''}>
+                    Assignee {sortField === 'assignee' && <span className="sort-indicator">{sortDirection === 'asc' ? '↑' : '↓'}</span>}
+                  </th>
+                )}
                 <th onClick={() => handleSort('dueDate')} className={sortField === 'dueDate' ? 'sorted' : ''}>
                   Due Date {sortField === 'dueDate' && <span className="sort-indicator">{sortDirection === 'asc' ? '↑' : '↓'}</span>}
                 </th>
@@ -280,7 +285,7 @@ export function Tasks() {
                       {task.priority}
                     </span>
                   </td>
-                  <td>{task.assignee || '-'}</td>
+                  {features.assignees && <td>{task.assignee || '-'}</td>}
                   <td>{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-'}</td>
                 </tr>
               ))}

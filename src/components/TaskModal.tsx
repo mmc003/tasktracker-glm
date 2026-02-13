@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { Task, TaskPriority, TaskStatus } from '../types/Task';
+import { features } from '../config/features';
 import './TaskModal.css';
 
 interface TaskModalProps {
@@ -137,15 +138,17 @@ export function TaskModal({ task, onClose, onDelete, onUpdate, startEditing = fa
                 </div>
               </div>
               <div className="modal-grid">
-                <div className="modal-section">
-                  <span className="modal-label">Assignee</span>
-                  <input
-                    type="text"
-                    className="modal-input"
-                    value={editForm.assignee}
-                    onChange={(e) => setEditForm({ ...editForm, assignee: e.target.value })}
-                  />
-                </div>
+                {features.assignees && (
+                  <div className="modal-section">
+                    <span className="modal-label">Assignee</span>
+                    <input
+                      type="text"
+                      className="modal-input"
+                      value={editForm.assignee}
+                      onChange={(e) => setEditForm({ ...editForm, assignee: e.target.value })}
+                    />
+                  </div>
+                )}
                 <div className="modal-section">
                   <span className="modal-label">Due Date</span>
                   <input
@@ -179,10 +182,12 @@ export function TaskModal({ task, onClose, onDelete, onUpdate, startEditing = fa
                   <span className="modal-label">Priority</span>
                   <span className={`priority-badge ${task.priority}`}>{task.priority}</span>
                 </div>
-                <div className="modal-section">
-                  <span className="modal-label">Assignee</span>
-                  <span className="modal-value">{task.assignee || 'Unassigned'}</span>
-                </div>
+                {features.assignees && (
+                  <div className="modal-section">
+                    <span className="modal-label">Assignee</span>
+                    <span className="modal-value">{task.assignee || 'Unassigned'}</span>
+                  </div>
+                )}
               </div>
 
               <div className="modal-grid">
